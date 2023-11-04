@@ -23,7 +23,7 @@ namespace UnityYamlParser
     {
         public List<GameObject> roots = new List<GameObject>();
     };
-    class ParseUnityYaml
+    public class ParseUnityYaml
     {
    
         public static Scene ParseYaml(string path)
