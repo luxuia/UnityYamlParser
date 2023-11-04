@@ -19,7 +19,7 @@ class Scene
 };
 class Program
 {
-    static void ParseUnity(string path)
+    static Scene ParseUnity(string path)
     {
         Console.WriteLine("Begin " + path);
         Console.WriteLine("----------- ");
@@ -153,6 +153,8 @@ class Program
 
         Console.WriteLine("----------- ");
         Console.WriteLine();
+
+        return scene;
     }
 
 
