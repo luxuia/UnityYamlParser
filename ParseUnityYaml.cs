@@ -19,6 +19,20 @@ namespace UnityYamlParser
         public dynamic data;
     };
 
+    public class GameObjectComparer : IEqualityComparer<GameObject>
+    {
+        public bool Equals(GameObject a, GameObject b)
+        {
+            return a.name == b.name;
+        }
+
+        public int GetHashCode(GameObject a)
+        {
+            return a.name.GetHashCode();
+        }
+    }
+
+
     public class Scene
     {
         public List<GameObject> roots = new List<GameObject>();
@@ -63,7 +77,8 @@ namespace UnityYamlParser
                     ref_gos[i] = new GameObject() { data = item["PrefabInstance"] };
                 }
             }
-            var trans_map = new Dictionary<int, GameObject>();
+            var trans2go = new Dictionary<int, GameObject>();
+            var wait_trans = new List<Tuple<dynamic, GameObject>>();
 
             foreach (var v in all_gos)
             {
@@ -94,27 +109,35 @@ namespace UnityYamlParser
 
                         if (key == "Transform")
                         {
+                            // 认为com的idx和go的idx一直
+                            trans2go[com_idx] = go;
 
                             var trans = comdata["Transform"];
-                            var owner_fileid = trans["m_GameObject"]["fileID"];
-                            var owneridx = fileid_map[owner_fileid];
-                            // 认为com的idx和go的idx一直
-                            trans_map[com_idx] = all_gos[owneridx];
+                            wait_trans.Add(new Tuple<dynamic, GameObject>(trans, go));
 
-                            var father = trans["m_Father"];
-                            if (father["fileID"] == 0)
-                            {
-                                scene.roots.Add(go);
-                            }
-                            else
-                            {
-                                if (fileid_map.ContainsKey(father["fileID"]))
-                                {
-                                    var parentgo = trans_map[fileid_map[father["fileID"]]];
-                                    parentgo.childs.Add(go);
-                                }
-                            }
+                            
                         }
+                    }
+                }
+            }
+            foreach (var v in wait_trans)
+            {
+                var trans = v.Item1;
+                var go = v.Item2;
+
+                var father = trans["m_Father"];
+                var father_id = father["fileID"];
+                if (father_id == 0)
+                {
+                    scene.roots.Add(go);
+                }
+                else
+                {
+                    if (fileid_map.ContainsKey(father_id))
+                    {
+                        var trans_id = fileid_map[father_id];
+                        var parentgo = trans2go[trans_id];
+                        parentgo.childs.Add(go);
                     }
                 }
             }
@@ -136,7 +159,7 @@ namespace UnityYamlParser
                 var father = data["m_Modification"]["m_TransformParent"];
                 if (fileid_map.ContainsKey(father["fileID"]))
                 {
-                    var parentgo = trans_map[fileid_map[father["fileID"]]];
+                    var parentgo = trans2go[fileid_map[father["fileID"]]];
                     parentgo.childs.Add(go);
                 }
             }
