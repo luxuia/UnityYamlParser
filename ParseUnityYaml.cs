@@ -107,12 +107,12 @@ namespace UnityYamlParser
 
                         go.comps.Add(key);
 
-                        if (key == "Transform")
+                        if (key == "Transform" || key == "RectTransform")
                         {
                             // 认为com的idx和go的idx一直
                             trans2go[com_idx] = go;
 
-                            var trans = comdata["Transform"];
+                            var trans = comdata[key];
                             wait_trans.Add(new Tuple<dynamic, GameObject>(trans, go));
 
                             
